@@ -1,0 +1,84 @@
+:root{
+  --c1:#503459;  /* header, acentos oscuros */
+  --c2:#81638b;  /* primario */
+  --c3:#b695c0;  /* primario claro */
+  --c4:#dac9df;  /* superficies suaves */
+  --c5:#ffffff;  /* texto/superficie */
+}
+
+body{ background: var(--c5); }
+.app-header{ background: var(--c1); border-bottom: 4px solid #6f4b83; }
+.label{ color: var(--c1); font-weight:600; }
+.btn-outline-primary{ --bs-btn-color: var(--c1); --bs-btn-border-color: var(--c1); --bs-btn-hover-bg: var(--c1); --bs-btn-hover-border-color: var(--c1); }
+.btn-primary{ background: var(--c2); border-color: var(--c2); }
+.btn-outline-warning{ --bs-btn-color:#a66; --bs-btn-border-color:#a66; --bs-btn-hover-bg:#a66; --bs-btn-hover-border-color:#a66; color:#a66; }
+.form-control.slim{ width: 80px; }
+
+.modal-soft{ background: var(--c4); border: 0; }
+.modal-soft .modal-header{ border:0; background: var(--c4); }
+.modal-soft .modal-body{ background: var(--c4); }
+
+.flower{
+  position: relative;
+  width: 420px; height: 340px;
+  margin: 20px 0 60px;
+}
+.petal,.leaf,.center{
+  position:absolute; border:0; cursor:pointer; outline:none;
+  transition: transform .08s ease;
+}
+.petal{ width:60px; height:84px; background: var(--c1); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; }
+/* .petal:hover,.leaf:hover,.center:hover{ transform: scale(1.05); } */
+.center{ width:92px; height:92px; background: var(--c2); border-radius:50%; left:50%; top:50%; transform: translate(-50%,-50%); }
+
+.p-top        { left:50%; top:20px; transform: translateX(-50%) rotate(180deg); }
+.p-bottom     { left:50%; bottom:20px; transform: translateX(-50%) rotate(0deg); }
+.p-left       { left:20px; top:50%; transform: translateY(-50%) rotate(90deg); }
+.p-right      { right:20px; top:50%; transform: translateY(-50%) rotate(-90deg); }
+
+.p-top-right     { right:96px;  top:62px; transform: rotate(-135deg); }
+.p-bottom-right  { right:96px;  bottom:62px; transform: rotate(-45deg); }
+.p-top-left      { left:96px;   top:62px; transform: rotate(135deg); }
+.p-bottom-left   { left:96px;   bottom:62px; transform: rotate(45deg); }
+/* antes: background: var(--c3);  ->  ahora tono fuerte */
+/* círculos inferiores (morado fuerte) */
+.leaf{
+  width: 90px;
+  height: 90px;
+  background: var(--c2);     /* tono fuerte */
+  border-radius: 50%;        /* círculo perfecto */
+  box-shadow: none;
+  transition: none !important;  /* estáticos */
+}
+
+/*.leaf{
+  width:120px; height:90px; background: var(--c3);
+  border-top-left-radius: 60px 60px; border-bottom-left-radius: 60px 60px;
+}*/
+.leaf-left  { left:40px;  bottom:-28px; transform: rotate(10deg); }
+.leaf-right { right:40px; bottom:-28px; transform: scaleX(-1) rotate(10deg); }
+
+/* FORZAR que no haya efecto hover ni transición */
+.petal, .leaf, .center { transition: none !important; }
+
+/* Player (animación) */
+.player-box{
+  height: 260px; display:flex; align-items:center; justify-content:center;
+  background:#d9d9de; border-radius:12px;
+}
+.car-anim{
+  width: 160px; height: 80px; border-radius: 16px;
+  position: relative; background: linear-gradient(180deg, #79a7ff 0%, #3f6ed6 100%);
+  box-shadow: 0 10px 0 rgba(0,0,0,.05) inset;
+}
+.car-anim::before, .car-anim::after{
+  content:""; position:absolute; bottom:-14px; width:28px; height:28px; border-radius:50%;
+  background:#222;
+}
+.car-anim::before{ left:20px; }
+.car-anim::after { right:20px; }
+.car-anim.moving{ animation: drive .6s infinite ease-in-out; }
+@keyframes drive{
+  0%,100% { transform: translateX(-4px); }
+  50%     { transform: translateX(4px); }
+}
