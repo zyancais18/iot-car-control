@@ -1,32 +1,22 @@
 // =======================
-//  main.js (cliente Socket.IO solo polling)
+//  main.js (WebSocket nativo + control IoT)
 // =======================
 
-const API_BASE   = (window.CONFIG && window.CONFIG.API) || `${location.origin.replace(/\/$/,'')}/api`;
-const DEVICE_ID  = (window.CONFIG && window.CONFIG.DEVICE_ID) || 1;
-const SIO_BASE       = (window.CONFIG && window.CONFIG.SIO) || window.location.origin;
-const SIO_NAMESPACE  = (window.CONFIG && window.CONFIG.SIO_NAMESPACE) || "/ws";
-const SIO_EVENT_NAME = (window.CONFIG && window.CONFIG.SIO_EVENT) || "broadcast";
-
-let sio = null;
-
-function initSocket(){
-  sio = io(`${SIO_BASE}${SIO_NAMESPACE}`, {
-    transports: ["polling"],   // 👈 importante con Werkzeug/threading
-    withCredentials: false
-  });
-
-  sio.on("connect", () => console.log("[SIO] conectado:", sio.id));
-  sio.on("disconnect", (reason) => console.log("[SIO] desconectado:", reason));
-  sio.on(SIO_EVENT_NAME, (payload) => {
-    console.log("[PUSH]", payload);
-    // appendPushToUI(payload);
-  });
-}
+const API_BASE  = (window.CONFIG && window.CONFIG.API) || `http://${location.hostname}:5500/api`;
+const WS_TARGET = (window.CONFIG && window.CONFIG.WS)  || `ws://${location.hostname}:5501/ws`;
+const DEVICE_ID = 1;
 
 const $  = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
 const wait = (ms)=>new Promise(r=>setTimeout(r,ms));
+
+// ---- Mapeo de velocidades (ms por paso al GRABAR) ----
+// Sugerencia firmware (PWM aprox.): snail=80/255, fox=150/255, cheetah=255/255
+const SPEED = {
+  snail:   { label: "Caracol", ms: 400, pwm:  80 },
+  fox:     { label: "Zorro",   ms: 200, pwm: 150 },
+  cheetah: { label: "Guepardo",ms:  80, pwm: 255 }
+};
 
 async function apiGet(path){
   const res = await fetch(`${API_BASE}${path}`);
@@ -57,11 +47,14 @@ const state = {
   pausa: false,
   run: { run_id: null, sesion_id: null },
   secuenciaSeleccionada: null,
-  loopActivo: false,
-  loopToken: 0,
-  cancelLoop: false
+
+  // WebSocket
+  ws: null,
+  wsReady: false,
+  wsRetry: 0
 };
 
+// ---------- UI helpers ----------
 function setGrabUI(on){
   $("#btnGuardar").disabled=!on||state.pasos.length===0;
   $("#btnDetener").disabled=!on;
@@ -69,8 +62,73 @@ function setGrabUI(on){
   rs.hidden = !on;
   rs.textContent = `Grabando: ${state.pasos.length} paso${state.pasos.length===1?"":"s"}…`;
 }
+function flashPetalByStatus(status){
+  const btn = document.querySelector(`[data-status="${status}"]`);
+  if(!btn) return;
+  const prev = btn.style.outline;
+  btn.style.outline = "3px solid #ffcc00";
+  setTimeout(()=> btn.style.outline = prev || "none", 300);
+}
+function updateWsLast(obj){
+  const el = $("#wsLast");
+  if(!el) return; // puede no existir en esta versión
+  try{ el.textContent = JSON.stringify(obj, null, 2); }catch(_){ el.textContent = String(obj); }
+}
+function showObstacleToast(){
+  const toastEl = $("#toastObstacle");
+  if(!toastEl) return;
+  const t = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 2500 });
+  t.show();
+}
 
+// ---------- WebSocket nativo ----------
+function connectWS(){
+  const ws = new WebSocket(WS_TARGET);
+  state.ws = ws;
+
+  ws.onopen = () => {
+    state.wsReady = true;
+    state.wsRetry = 0;
+    // opcional: quitar ping si no quieres ver "pong" en monitores
+    // try{ ws.send(JSON.stringify({type:"ping"})); }catch(_){}
+  };
+
+  ws.onmessage = (ev) => {
+    let msg = ev.data;
+    try{ msg = JSON.parse(ev.data); }catch(_){}
+    updateWsLast(msg);
+
+    const t = (msg && msg.type) || "";
+
+    // Resaltar pétalo si viene status_clave
+    const s = msg?.status_clave ?? msg?.status ?? msg?.data?.status_clave;
+    if (typeof s === "number") flashPetalByStatus(s);
+
+    // Si llega un obstáculo, muestra toast
+    // (aceptamos varios formatos: type que empiece con "obstaculo" o presencia de obstaculo_clave)
+    if ((typeof t === "string" && t.startsWith("obstaculo")) || msg?.obstaculo_clave != null) {
+      showObstacleToast();
+    }
+  };
+
+  ws.onclose = () => {
+    state.wsReady = false;
+    retryWS();
+  };
+
+  ws.onerror = () => {
+    // el onclose hará el retry
+  };
+}
+function retryWS(){
+  state.wsRetry = Math.min(state.wsRetry + 1, 6);
+  const delay = Math.min(1000 * 2 ** (state.wsRetry - 1), 15000);
+  setTimeout(connectWS, delay);
+}
+
+// ---------- INIT ----------
 window.addEventListener("DOMContentLoaded",()=>{
+  // Conmutar modos
   const modeManual=$("#modeManual"),modeAuto=$("#modeAuto"),autoBar=$("#autoBar");
   const aplicarModo=m=>{
     state.modo=m;
@@ -80,23 +138,34 @@ window.addEventListener("DOMContentLoaded",()=>{
   modeManual.addEventListener("change",()=>{if(modeManual.checked){modeAuto.checked=false;aplicarModo("MANUAL");}});
   modeAuto.addEventListener("change",()=>{if(modeAuto.checked){modeManual.checked=false;aplicarModo("AUTO");}});
 
+  // Flor
   $$("#flower .petal, #flower .leaf").forEach(b=>b.addEventListener("click",()=>handlePetal(b)));
 
+  // Selector de velocidad -> actualiza msInput (solo lectura)
+  const sel = $("#speedMode");
+  const msInput = $("#msInput");
+  const applySpeed = () => {
+    const key = sel.value in SPEED ? sel.value : "fox";
+    msInput.value = SPEED[key].ms;
+  };
+  sel.addEventListener("change", applySpeed);
+  applySpeed(); // default
+
+  // Botonera AUTO
   $("#btnGrabar").addEventListener("click",onGrabar);
   $("#btnGuardar").addEventListener("click",onGuardar);
   $("#btnCargar").addEventListener("click",onAbrirCargar);
   $("#btnDetener").addEventListener("click",onDetenerGrabacion);
 
+  // Modal Cargar/Reproducir
   $("#btnReproducir").addEventListener("click",onReproducirSeleccion);
   $("#listaSecuencias").addEventListener("click",onSelectSecuencia);
 
-  $("#btnSimObst").addEventListener("click",onObstaculo);
-  $("#btnConfirmSi").addEventListener("click", ()=>{ state.pausa=false; });
-  $("#btnConfirmNo").addEventListener("click", ()=>{});
-
-  initSocket();
+  // WS
+  connectWS();
 });
 
+// --- Pétalos ---
 async function handlePetal(btn){
   const status=Number(btn.dataset.status);
   if(state.modo==="MANUAL"){
@@ -113,42 +182,32 @@ async function handlePetal(btn){
   }
 }
 
-function onGrabar(){
-  state.grabando=true;
-  state.pasos=[];
-  setGrabUI(true);
-}
+// --- Grabar / Guardar / Detener (grabación) ---
+function onGrabar(){ state.grabando=true; state.pasos=[]; setGrabUI(true); }
 function onGuardar(){
   if(!state.grabando||state.pasos.length===0) return;
   const nombre=`DEMO ${new Date().toLocaleString()}`;
   apiPost("/secuencias/demo",{dispositivo_id:DEVICE_ID,nombre,pasos:state.pasos})
-    .then(()=>{
-      state.grabando=false;
-      state.pasos=[];
-      setGrabUI(false);
-    })
+    .then(()=>{ state.grabando=false; state.pasos=[]; setGrabUI(false); })
     .catch(e=>console.error("Error guardando:",e.message));
 }
-function onDetenerGrabacion(){
-  state.grabando=false;
-  state.pasos=[];
-  setGrabUI(false);
-}
+function onDetenerGrabacion(){ state.grabando=false; state.pasos=[]; setGrabUI(false); }
 
+// --- Cargar / Reproducir ---
 let modalCargar;
 function onAbrirCargar(){
   $("#listaSecuencias").innerHTML=`<div class="list-group-item">Cargando…</div>`;
   apiGet(`/secuencias/demo/ultimas20/${DEVICE_ID}`)
-  .then(r=>{
-    const lista=r?.data?.[0]||[];
-    if(lista.length===0){ $("#listaSecuencias").innerHTML=`<div class="list-group-item">Sin secuencias</div>`; return; }
-    $("#listaSecuencias").innerHTML=lista.map(s=>`
-      <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-id="${s.secuencia_id}">
-        <span>#${s.secuencia_id??"-"} – ${s.nombre||"DEMO"}</span>
-        <span class="badge bg-secondary">DEMO</span>
-      </button>`).join("");
-  })
-  .catch(e=>{ $("#listaSecuencias").innerHTML=`<div class="list-group-item">Error: ${e.message}</div>`; });
+    .then(r=>{
+      const lista=r?.data?.[0]||[];
+      if(lista.length===0){ $("#listaSecuencias").innerHTML=`<div class="list-group-item">Sin secuencias</div>`; return; }
+      $("#listaSecuencias").innerHTML=lista.map(s=>`
+        <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-id="${s.secuencia_id}">
+          <span>#${s.secuencia_id??"-"} – ${s.nombre||"DEMO"}</span>
+          <span class="badge bg-secondary">DEMO</span>
+        </button>`).join("");
+    })
+    .catch(e=>{ $("#listaSecuencias").innerHTML=`<div class="list-group-item">Error: ${e.message}</div>`; });
   modalCargar=bootstrap.Modal.getOrCreateInstance($("#modalCargar"));
   modalCargar.show();
 }
@@ -193,7 +252,6 @@ async function onReproducirSeleccion(){
 async function loopSiguientePaso(){
   try{
     while(state.reproduciendo){
-      if(state.pausa){ await wait(120); continue; }
       const r = await apiPost("/secuencia/run/siguiente_paso", {
         run_id: state.run.run_id,
         sesion_id: state.run.sesion_id
@@ -204,19 +262,5 @@ async function loopSiguientePaso(){
     }
   }catch(e){
     console.warn("Reproducción detenida:", e.message);
-  }
-}
-
-async function onObstaculo(){
-  const estaEnRun = !!(state.reproduciendo && state.run.run_id);
-  try{
-    await apiPost("/obstaculo/logica", {
-      dispositivo_id: DEVICE_ID,
-      obstaculo_clave: 1,
-      modo:  estaEnRun ? "AUTO" : "MANUAL",
-      run_id: estaEnRun ? state.run.run_id : null
-    });
-  }catch(e){
-    console.error("Error obstáculo:", e.message);
   }
 }
