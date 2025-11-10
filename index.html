@@ -27,8 +27,17 @@
   <main class="container py-4">
     <!-- Barra de controles (solo Automático) -->
     <div id="autoBar" class="row g-2 align-items-center mb-3 d-none">
-      <div class="col-auto"><span class="label">ms</span></div>
-      <div class="col-auto"><input id="msInput" type="number" class="form-control form-control-sm slim" value="200" min="50" step="50"></div>
+      <div class="col-auto"><span class="label">Velocidad</span></div>
+      <div class="col-auto">
+        <select id="speedMode" class="form-select form-select-sm">
+          <option value="snail">🐌 Caracol (muy lento)</option>
+          <option value="fox">🦊 Zorro (normal)</option>
+          <option value="cheetah">🐆 Guepardo (rápido)</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <input id="msInput" type="number" class="form-control form-control-sm slim" value="200" min="50" step="10" readonly>
+      </div>
       <div class="col-auto"><button id="btnGrabar" class="btn btn-outline-primary btn-sm">Grabar</button></div>
       <div class="col-auto"><button id="btnGuardar" class="btn btn-outline-primary btn-sm" disabled>Guardar</button></div>
       <div class="col-auto"><button id="btnCargar" class="btn btn-outline-primary btn-sm">Cargar</button></div>
@@ -38,7 +47,7 @@
     <!-- La flor de botones -->
     <section class="d-flex justify-content-center position-relative">
       <div id="flower" class="flower position-relative">
-        <!-- Indicador de grabación (al lado de la figura) -->
+        <!-- Indicador de grabación -->
         <div id="recStatus"
              class="small text-secondary"
              style="position:absolute; right:-150px; top:0; width:140px;"
@@ -86,7 +95,7 @@
     </div>
   </div>
 
-  <!-- Modal: Reproducción con animación -->
+  <!-- Modal: Reproducción con animación (SIN botón de obstáculo) -->
   <div class="modal fade" id="modalPlayer" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content modal-soft">
@@ -95,8 +104,6 @@
             <div class="car-anim" id="carAnim"></div>
           </div>
           <div class="d-flex gap-3 justify-content-center mt-3">
-            <button id="btnSimObst" class="btn btn-outline-primary">Obstáculo</button>
-            <!-- Botón 'Detener' ELIMINADO a petición -->
             <button id="btnExitRun" class="btn btn-outline-secondary" data-bs-dismiss="modal">Salir</button>
           </div>
         </div>
@@ -104,24 +111,17 @@
     </div>
   </div>
 
-  <!-- Modal: Confirmación reanudar (queda, pero ya no se usa al quitar "Detener") -->
-  <div class="modal fade" id="modalConfirm" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
-      <div class="modal-content modal-soft">
-        <div class="modal-body text-center">
-          <p class="mb-3">Se detuvo la secuencia, ¿desea continuar?</p>
-          <div class="d-flex gap-2 justify-content-center">
-            <button id="btnConfirmSi" class="btn btn-primary">Sí</button>
-            <button id="btnConfirmNo" class="btn btn-outline-secondary" data-bs-dismiss="modal">No</button>
-          </div>
-        </div>
+  <!-- Toast: Obstáculo detectado -->
+  <div class="position-fixed top-0 end-0 p-3" style="z-index:1080">
+    <div id="toastObstacle" class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body"><strong>Obstáculo detectado</strong>: evadiendo…</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
       </div>
     </div>
   </div>
 
   <script>
-    // La API queda igual; el WS nativo ya no se usa.
-    // SIO apunta al mismo host:puerto de Flask (5500) y al namespace /ws del back.
     window.CONFIG = {
       API: "http://34.196.181.221:5500/api",
       SIO: "http://34.196.181.221:5500",   // base del servidor Flask+Socket.IO
@@ -129,14 +129,7 @@
       SIO_EVENT: "broadcast"           // evento que emite el back
     };
   </script>
-
-  <!-- CDN Socket.IO v4 -->
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="assets/js/main.js"></script>
-
 </body>
 </html>
-
-
