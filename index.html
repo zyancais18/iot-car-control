@@ -122,10 +122,12 @@
   </div>
 
   <script>
-  window.CONFIG = {
-    API: "https://34.196.181.221:5500/api",
-    WS:  "wss://34.196.181.221:5500/ws"
-  };
+    window.CONFIG = {
+      API: "http://34.196.181.221:5500/api",
+      SIO: "http://34.196.181.221:5500",   // base del servidor Flask+Socket.IO
+      SIO_NAMESPACE: "/ws",            // namespace del back
+      SIO_EVENT: "broadcast"           // evento que emite el back
+    };
 </script>
 
   </script>
@@ -133,4 +135,5 @@
   <script src="assets/js/main.js"></script>
 </body>
 </html>
+
 
