@@ -1,9 +1,14 @@
 // =======================
 //  main.js (WebSocket nativo + control IoT)
 // =======================
+// antes:
+// const API_BASE  = (window.CONFIG && window.CONFIG.API) || `http://${location.hostname}:5500/api`;
+// const WS_TARGET = (window.CONFIG && window.CONFIG.WS)  || `ws://${location.hostname}:5501/ws`;
 
-const API_BASE  = (window.CONFIG && window.CONFIG.API) || `http://${location.hostname}:5500/api`;
-const WS_TARGET = (window.CONFIG && window.CONFIG.WS)  || `ws://${location.hostname}:5501/ws`;
+// después (fallbacks seguros por si olvidas CONFIG):
+const API_BASE  = (window.CONFIG && window.CONFIG.API) || `https://${location.hostname}/api`;
+const WS_TARGET = (window.CONFIG && window.CONFIG.WS)  || `wss://${location.hostname}/ws`;
+
 const DEVICE_ID = 1;
 
 const $  = (s,r=document)=>r.querySelector(s);
@@ -264,3 +269,4 @@ async function loopSiguientePaso(){
     console.warn("Reproducción detenida:", e.message);
   }
 }
+
