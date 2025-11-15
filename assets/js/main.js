@@ -1,22 +1,37 @@
 // =======================
 //  main.js (WebSocket nativo + control IoT)
 // =======================
-// antes:
+
 const API_BASE  = (window.CONFIG && window.CONFIG.API) || `http://${location.hostname}:5500/api`;
 const WS_TARGET = (window.CONFIG && window.CONFIG.WS)  || `ws://${location.hostname}:5501/ws`;
-
 const DEVICE_ID = 1;
 
 const $  = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
 const wait = (ms)=>new Promise(r=>setTimeout(r,ms));
 
-// ---- Mapeo de velocidades (ms por paso al GRABAR) ----
-// Sugerencia firmware (PWM aprox.): snail=80/255, fox=150/255, cheetah=255/255
+// ---- Presets de TIEMPO (ms por paso al GRABAR) ----
+// Caracol: 3 s, Zorro: 2 s, Guepardo: 1 s
 const SPEED = {
-  snail:   { label: "Caracol", ms: 400, pwm:  80 },
-  fox:     { label: "Zorro",   ms: 200, pwm: 150 },
-  cheetah: { label: "Guepardo",ms:  80, pwm: 255 }
+  snail:   { label: "Caracol",  ms: 3000, pwm:  80 },
+  fox:     { label: "Zorro",    ms: 2000, pwm: 150 },
+  cheetah: { label: "Guepardo", ms: 1000, pwm: 255 }
+};
+
+
+// ---- Presets de velocidad (0–9 y 'q' = MAX) mapeados a 0–255 ----
+const VEL_PRESETS = {
+  "0": 0,
+  "1": 28,
+  "2": 56,
+  "3": 84,
+  "4": 112,
+  "5": 140,
+  "6": 168,
+  "7": 196,
+  "8": 224,
+  "9": 240,
+  "q": 255
 };
 
 async function apiGet(path){
@@ -48,6 +63,10 @@ const state = {
   pausa: false,
   run: { run_id: null, sesion_id: null },
   secuenciaSeleccionada: null,
+
+  // Velocidad actual (preset 0–9 o 'q' y valor 0–255)
+  velPreset: "5",
+  velocidad: VEL_PRESETS["5"],
 
   // WebSocket
   ws: null,
@@ -127,30 +146,69 @@ function retryWS(){
   setTimeout(connectWS, delay);
 }
 
+// ---------- Velocidad presets ----------
+function setVelocidadPreset(preset){
+  if (!(preset in VEL_PRESETS)) preset = "5";
+  state.velPreset = preset;
+  state.velocidad = VEL_PRESETS[preset];
+
+  // actualizar estilos de los botones
+  $$("#speedPresets .speed-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.speed === preset);
+  });
+}
+
 // ---------- INIT ----------
 window.addEventListener("DOMContentLoaded",()=>{
   // Conmutar modos
-  const modeManual=$("#modeManual"),modeAuto=$("#modeAuto"),autoBar=$("#autoBar");
-  const aplicarModo=m=>{
-    state.modo=m;
-    if(m==="AUTO")autoBar.classList.remove("d-none");
-    else autoBar.classList.add("d-none");
+  const modeManual   = $("#modeManual");
+  const modeAuto     = $("#modeAuto");
+  const autoControls = $("#autoControls");
+
+  const aplicarModo = m => {
+    state.modo = m;
+    if(m==="AUTO") autoControls.classList.remove("d-none");
+    else autoControls.classList.add("d-none");
   };
-  modeManual.addEventListener("change",()=>{if(modeManual.checked){modeAuto.checked=false;aplicarModo("MANUAL");}});
-  modeAuto.addEventListener("change",()=>{if(modeAuto.checked){modeManual.checked=false;aplicarModo("AUTO");}});
+
+  modeManual.addEventListener("change",()=>{
+    if(modeManual.checked){
+      modeAuto.checked=false;
+      aplicarModo("MANUAL");
+    }
+  });
+  modeAuto.addEventListener("change",()=>{
+    if(modeAuto.checked){
+      modeManual.checked=false;
+      aplicarModo("AUTO");
+    }
+  });
+  aplicarModo("MANUAL"); // estado inicial
 
   // Flor
   $$("#flower .petal, #flower .leaf").forEach(b=>b.addEventListener("click",()=>handlePetal(b)));
 
-  // Selector de velocidad -> actualiza msInput (solo lectura)
+  // Selector de velocidad TIEMPO -> actualiza msInput (solo lectura)
   const sel = $("#speedMode");
   const msInput = $("#msInput");
   const applySpeed = () => {
+    if (!sel || !msInput) return;
     const key = sel.value in SPEED ? sel.value : "fox";
     msInput.value = SPEED[key].ms;
   };
-  sel.addEventListener("change", applySpeed);
-  applySpeed(); // default
+  if (sel && msInput) {
+    sel.addEventListener("change", applySpeed);
+    applySpeed(); // default
+  }
+
+  // Presets de VELOCIDAD (0–9, MAX) – siempre visibles
+  const speedButtons = $$("#speedPresets .speed-btn");
+  if (speedButtons.length){
+    speedButtons.forEach(btn => {
+      btn.addEventListener("click", () => setVelocidadPreset(btn.dataset.speed));
+    });
+    setVelocidadPreset(state.velPreset || "5");
+  }
 
   // Botonera AUTO
   $("#btnGrabar").addEventListener("click",onGrabar);
@@ -175,7 +233,11 @@ async function handlePetal(btn){
     }catch(e){ console.error("Error movimiento manual:",e.message); }
   }else if(state.grabando){
     const ms=Math.max(50,Number($("#msInput").value||200));
-    state.pasos.push({status,ms});
+    const velocidad = typeof state.velocidad === "number" ? state.velocidad : 0;
+
+    // ahora cada paso lleva status, ms y velocidad (0–255)
+    state.pasos.push({status, ms, velocidad});
+
     const rs = $("#recStatus");
     rs.hidden = false;
     rs.textContent = `Grabando: ${state.pasos.length} paso${state.pasos.length===1?"":"s"}…`;
@@ -265,5 +327,3 @@ async function loopSiguientePaso(){
     console.warn("Reproducción detenida:", e.message);
   }
 }
-
-
