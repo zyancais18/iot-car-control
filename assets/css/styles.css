@@ -82,3 +82,40 @@ body{ background: var(--c5); }
   0%,100% { transform: translateX(-4px); }
   50%     { transform: translateX(4px); }
 }
+/* Barra de presets de velocidad */
+.speed-panel{
+  background: var(--c4);
+  border-radius: 999px;
+  padding: .35rem .75rem;
+}
+
+.speed-title{
+  color: var(--c1);
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+
+.speed-subtitle{
+  white-space: nowrap;
+}
+
+.speed-btn{
+  min-width: 36px;
+  padding: .15rem .6rem;
+  border-radius: 999px;
+  font-size: .8rem;
+  line-height: 1.2;
+}
+
+/* botón seleccionado */
+.speed-btn.active{
+  background: var(--c1);
+  border-color: var(--c1);
+  color: #fff;
+}
+
+@media (max-width: 576px){
+  .speed-panel{
+    align-items: flex-start !important;
+  }
+}
