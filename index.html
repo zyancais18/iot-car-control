@@ -27,21 +27,48 @@
   <main class="container py-4">
     <!-- Barra de controles (solo Automático) -->
     <div id="autoBar" class="row g-2 align-items-center mb-3 d-none">
-      <div class="col-auto"><span class="label">Tiempo</span></div>
-      <div class="col-auto">
-        <select id="speedMode" class="form-select form-select-sm">
+      <!-- Izquierda: Tiempo / grabación, solo en modo AUTOMÁTICO -->
+      <div id="autoControls" class="col-lg-7 d-flex flex-wrap align-items-center gap-2 d-none">
+        <span class="label me-1">Tiempo</span>
+
+        <select id="speedMode" class="form-select form-select-sm w-auto">
           <option value="snail">🐌 Caracol (muy lento)</option>
           <option value="fox">🦊 Zorro (normal)</option>
           <option value="cheetah">🐆 Guepardo (rápido)</option>
         </select>
+
+        <input id="msInput" type="number"
+               class="form-control form-control-sm slim"
+               value="200" min="50" step="10" readonly>
+
+        <button id="btnGrabar"  class="btn btn-outline-primary btn-sm">Grabar</button>
+        <button id="btnGuardar" class="btn btn-outline-primary btn-sm" disabled>Guardar</button>
+        <button id="btnCargar"  class="btn btn-outline-primary btn-sm">Cargar</button>
+        <button id="btnDetener" class="btn btn-outline-danger  btn-sm" disabled>Detener</button>
       </div>
-      <div class="col-auto">
-        <input id="msInput" type="number" class="form-control form-control-sm slim" value="1000" min="2000" step="3000" readonly>
+
+      <!-- Derecha: Velocidad (presets 0–9 y MAX) visible SIEMPRE -->
+      <div class="col-lg-5 ms-auto">
+        <div class="speed-panel d-flex flex-column flex-sm-row justify-content-sm-end align-items-sm-center gap-2">
+          <div class="speed-title small text-uppercase">Velocidad</div>
+          <div class="speed-subtitle small text-muted d-none d-md-inline">
+            Presets: 0–9 y MAX.
+          </div>
+          <div id="speedPresets" class="d-flex flex-wrap gap-1">
+            <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="0">0</button>
+            <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="1">1</button>
+            <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="2">2</button>
+            <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="3">3</button>
+            <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="4">4</button>
+            <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="5">5</button>
+            <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="6">6</button>
+            <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="7">7</button>
+            <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="8">8</button>
+            <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="9">9</button>
+            <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="q">MAX</button>
+          </div>
+        </div>
       </div>
-      <div class="col-auto"><button id="btnGrabar" class="btn btn-outline-primary btn-sm">Grabar</button></div>
-      <div class="col-auto"><button id="btnGuardar" class="btn btn-outline-primary btn-sm" disabled>Guardar</button></div>
-      <div class="col-auto"><button id="btnCargar" class="btn btn-outline-primary btn-sm">Cargar</button></div>
-      <div class="col-auto"><button id="btnDetener" class="btn btn-outline-danger btn-sm" disabled>Detener</button></div>
     </div>
 
     <!-- La flor de botones -->
@@ -135,6 +162,7 @@
   <script src="assets/js/main.js"></script>
 </body>
 </html>
+
 
 
 
