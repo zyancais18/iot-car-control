@@ -82,6 +82,7 @@ body{ background: var(--c5); }
   0%,100% { transform: translateX(-4px); }
   50%     { transform: translateX(4px); }
 }
+
 /* Barra de presets de velocidad */
 .speed-panel{
   background: var(--c4);
