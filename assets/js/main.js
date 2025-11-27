@@ -17,20 +17,13 @@ const SPEED = {
   cheetah: { label: "Guepardo", ms: 1000, pwm: 255 }
 };
 
-// ---- Presets de velocidad (0–9 y 'q' = MAX) mapeados a 0–255 ----
+// ---- Presets de velocidad (3 niveles) ----
 const VEL_PRESETS = {
-  "0": 0,
-  "1": 28,
-  "2": 56,
-  "3": 84,
-  "4": 112,
-  "5": 140,
-  "6": 168,
-  "7": 196,
-  "8": 224,
-  "9": 240,
-  "q": 255
+  baja: 120,
+  media: 180,
+  alta: 255
 };
+
 
 async function apiGet(path){
   const res = await fetch(`${API_BASE}${path}`);
@@ -60,9 +53,9 @@ const state = {
   pasos: [],
   secuenciaSeleccionada: null,
 
-  // Velocidad actual (preset 0–9 o 'q' y valor 0–255)
-  velPreset: "5",
-  velocidad: VEL_PRESETS["5"],
+  // Velocidad actual (baja / media / alta)
+  velPreset: "media",
+  velocidad: VEL_PRESETS["media"],
 
   // Reproducción AUTO
   reproduciendo: false,
@@ -148,7 +141,7 @@ function retryWS(){
 
 // ---------- Velocidad presets ----------
 function setVelocidadPreset(preset){
-  if (!(preset in VEL_PRESETS)) preset = "5";
+  if (!(preset in VEL_PRESETS)) preset = "media";
   state.velPreset = preset;
   state.velocidad = VEL_PRESETS[preset];
 
@@ -339,7 +332,7 @@ function onSelectSecuencia(ev){
   $("#btnReproducir").disabled = false;
 }
 
-// --- Reproducir secuencia en cliente (llamando /movimientos paso a paso) ---
+// --- Reproducir secuencia usando el endpoint /secuencias/demo/:id/repetir ---
 async function onReproducirSeleccion(){
   if (!state.secuenciaSeleccionada) return;
 
@@ -354,30 +347,14 @@ async function onReproducirSeleccion(){
   state.reproduciendo = true;
 
   try {
-    const r = await apiGet(`/secuencias/demo/${state.secuenciaSeleccionada}`);
-    const pasos = r?.data?.[1] || [];
+    // Llamamos al nuevo endpoint del back que ejecuta TODA la secuencia
+    await apiPost(`/secuencias/demo/${state.secuenciaSeleccionada}/repetir`, {
+      dispositivo_id: DEVICE_ID,
+      modo: "AUTO"
+      // pais, ciudad, lat, lon son opcionales
+    });
 
-    for (const paso of pasos) {
-      if (!state.reproduciendo) break;
-
-      const status_clave = Number(paso.status_clave);
-      const ms = Math.max(50, Number(paso.ms || 200));
-      const velocidad = Math.max(
-        0,
-        Math.min(255, Number(paso.velocidad ?? state.velocidad ?? 0))
-      );
-
-      await apiPost("/movimientos", {
-        dispositivo_id: DEVICE_ID,
-        status_clave,
-        modo: "AUTO",
-        velocidad,
-        duracion_ms: ms
-      });
-
-      await wait(ms);
-    }
-
+    // Cuando el back responde, la secuencia ya terminó de ejecutarse
   } catch (e) {
     console.error("Error al reproducir:", e.message);
   } finally {
@@ -386,4 +363,3 @@ async function onReproducirSeleccion(){
     modalPlayer.hide();
   }
 }
-
