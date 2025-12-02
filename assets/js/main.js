@@ -230,6 +230,21 @@ window.addEventListener("DOMContentLoaded",()=>{
 
   // WS
   connectWS();
+
+  // --- Tooltips para pétalos / hojas usando aria-label ---
+  const flowerButtons = $$("#flower button");
+  flowerButtons.forEach(btn => {
+    const label = btn.getAttribute("aria-label");
+    if (label) {
+      btn.setAttribute("data-bs-toggle", "tooltip");
+      btn.setAttribute("data-bs-placement", "top");
+      btn.setAttribute("title", label);
+    }
+  });
+  const tooltipTriggerList = [].slice.call(
+    document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  );
+  tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
 });
 
 // --- Pétalos ---
@@ -363,4 +378,5 @@ async function onReproducirSeleccion(){
     modalPlayer.hide();
   }
 }
+
 
