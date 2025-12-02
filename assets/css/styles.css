@@ -133,9 +133,10 @@ body{ background: var(--c5); }
 .app-footer{
   background: var(--c1);             /* mismo color que el header */
   color: #ffffff;
-  border-top: 4px solid #6f4b83;     /* igual que el borde inferior del header */
+  border-top: 2px solid #6f4b83;     /* igual que el borde inferior del header */
   text-align: center;
   font-size: 0.9rem;
 }
+
 
 
