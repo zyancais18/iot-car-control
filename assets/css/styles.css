@@ -124,4 +124,5 @@ body{ background: var(--c5); }
     align-items: flex-start !important;
   }
 }
-footer{ background: var(--c4); border-top: 2px solid var(--c3); }
+footer{ background: var(--c5); border-top: 2px solid var(--c3); }
+
