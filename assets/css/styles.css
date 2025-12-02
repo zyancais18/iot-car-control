@@ -26,7 +26,7 @@ body{ background: var(--c5); }
 .flower{
   position: relative;
   width: 420px; height: 340px;
-  margin: -5px 0 30px;
+  margin: -5px 0 20px;
 }
 .petal,.leaf,.center{
   position:absolute; border:0; cursor:pointer; outline:none;
@@ -137,6 +137,7 @@ body{ background: var(--c5); }
   text-align: center;
   font-size: 0.9rem;
 }
+
 
 
 
