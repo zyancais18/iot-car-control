@@ -3,7 +3,7 @@
 // =======================
 
 const API_BASE  = (window.CONFIG && window.CONFIG.API) || `http://34.196.181.221:5500/api`;
-const WS_TARGET = (window.CONFIG && window.CONFIG.WS)  || `ws://34.196.181.221:5500/ws`;
+const WS_TARGET = (window.CONFIG && window.CONFIG.WS)  || `ws://34.196.181.221:5501/ws`;
 const DEVICE_ID = 1;
 
 const $  = (s,r=document)=>r.querySelector(s);
@@ -378,5 +378,6 @@ async function onReproducirSeleccion(){
     modalPlayer.hide();
   }
 }
+
 
 
