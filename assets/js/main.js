@@ -105,21 +105,22 @@ function updateWsLast(msg){
   const lineText = `[${now}] ${typeof msg === "string" ? msg : formatJsonInline(msg)}`;
   const type = (msg && msg.type) ? String(msg.type) : "";
 
-  // Movimientos
-  if (type.startsWith("movimiento")) {
-    state.logsMovimientos.push(lineText);
-    if (state.logsMovimientos.length > 50) state.logsMovimientos.shift();
-    const elMov = $("#wsMovimientos");
-    if (elMov) elMov.textContent = state.logsMovimientos.join("\n\n");
-  }
+if (type.startsWith("movimiento")) {
+  // Insertar al inicio (más reciente arriba)
+  state.logsMovimientos.unshift(lineText);
+  if (state.logsMovimientos.length > 50) state.logsMovimientos.pop();   // recorta el último (más viejo)
 
-  // Obstáculos
-  if (type.startsWith("obstaculo")) {
-    state.logsObstaculos.push(lineText);
-    if (state.logsObstaculos.length > 50) state.logsObstaculos.shift();
-    const elObs = $("#wsObstaculos");
-    if (elObs) elObs.textContent = state.logsObstaculos.join("\n\n");
-  }
+  const elMov = $("#wsMovimientos");
+  if (elMov) elMov.textContent = state.logsMovimientos.join("\n\n");
+}
+
+if (type.startsWith("obstaculo")) {
+  state.logsObstaculos.unshift(lineText);
+  if (state.logsObstaculos.length > 50) state.logsObstaculos.pop();
+
+  const elObs = $("#wsObstaculos");
+  if (elObs) elObs.textContent = state.logsObstaculos.join("\n\n");
+}
 }
 
 function showObstacleToast(){
@@ -411,3 +412,4 @@ async function onReproducirSeleccion(){
     modalPlayer.hide();
   }
 }
+
