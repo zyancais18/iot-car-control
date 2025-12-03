@@ -24,7 +24,6 @@ const VEL_PRESETS = {
   alta: 255
 };
 
-
 async function apiGet(path){
   const res = await fetch(`${API_BASE}${path}`);
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -63,7 +62,11 @@ const state = {
   // WebSocket
   ws: null,
   wsReady: false,
-  wsRetry: 0
+  wsRetry: 0,
+
+  // Logs de WebSocket
+  logsMovimientos: [],
+  logsObstaculos: []
 };
 
 // ---------- UI helpers ----------
@@ -83,10 +86,40 @@ function flashPetalByStatus(status){
   setTimeout(()=> btn.style.outline = prev || "none", 300);
 }
 
-function updateWsLast(obj){
-  const el = $("#wsLast"); // opcional, puede no existir
-  if(!el) return;
-  try{ el.textContent = JSON.stringify(obj, null, 2); }catch(_){ el.textContent = String(obj); }
+// Formato tipo: {"type": "movimiento:nuevo", ...}
+function formatJsonInline(obj){
+  try{
+    const raw = JSON.stringify(obj);
+    return raw
+      .replace(/","/g, '", "')
+      .replace(/":"/g, '": "')
+      .replace(/":/g, '": ');
+  }catch(_){
+    return String(obj);
+  }
+}
+
+// Actualiza feeds de Movimientos / Obstáculos
+function updateWsLast(msg){
+  const now = new Date().toISOString().replace("T"," ").slice(0,19);
+  const lineText = `[${now}] ${typeof msg === "string" ? msg : formatJsonInline(msg)}`;
+  const type = (msg && msg.type) ? String(msg.type) : "";
+
+  // Movimientos
+  if (type.startsWith("movimiento")) {
+    state.logsMovimientos.push(lineText);
+    if (state.logsMovimientos.length > 50) state.logsMovimientos.shift();
+    const elMov = $("#wsMovimientos");
+    if (elMov) elMov.textContent = state.logsMovimientos.join("\n\n");
+  }
+
+  // Obstáculos
+  if (type.startsWith("obstaculo")) {
+    state.logsObstaculos.push(lineText);
+    if (state.logsObstaculos.length > 50) state.logsObstaculos.shift();
+    const elObs = $("#wsObstaculos");
+    if (elObs) elObs.textContent = state.logsObstaculos.join("\n\n");
+  }
 }
 
 function showObstacleToast(){
@@ -198,13 +231,13 @@ window.addEventListener("DOMContentLoaded",()=>{
     applySpeed(); // default
   }
 
-  // Presets de VELOCIDAD (0–9, MAX) – siempre visibles
+  // Presets de VELOCIDAD – siempre visibles
   const speedButtons = $$("#speedPresets .speed-btn");
   if (speedButtons.length){
     speedButtons.forEach(btn => {
       btn.addEventListener("click", () => setVelocidadPreset(btn.dataset.speed));
     });
-    setVelocidadPreset(state.velPreset || "5");
+    setVelocidadPreset(state.velPreset || "media");
   }
 
   // Botonera AUTO (grabación)
@@ -231,7 +264,7 @@ window.addEventListener("DOMContentLoaded",()=>{
   // WS
   connectWS();
 
-  // --- Tooltips para pétalos / hojas usando aria-label ---
+  // Tooltips para pétalos / hojas usando aria-label
   const flowerButtons = $$("#flower button");
   flowerButtons.forEach(btn => {
     const label = btn.getAttribute("aria-label");
@@ -378,6 +411,3 @@ async function onReproducirSeleccion(){
     modalPlayer.hide();
   }
 }
-
-
-
