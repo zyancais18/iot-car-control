@@ -23,6 +23,7 @@ body{ background: var(--c5); }
   margin-bottom: .25rem;   /* antes: mb-3 de Bootstrap (~16px) */
 }
 
+/* Flor */
 .flower{
   position: relative;
   width: 420px; height: 340px;
@@ -33,7 +34,6 @@ body{ background: var(--c5); }
   transition: transform .08s ease;
 }
 .petal{ width:60px; height:84px; background: var(--c1); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; }
-/* .petal:hover,.leaf:hover,.center:hover{ transform: scale(1.05); } */
 .center{ width:92px; height:92px; background: var(--c2); border-radius:50%; left:50%; top:50%; transform: translate(-50%,-50%); }
 
 .p-top        { left:50%; top:20px; transform: translateX(-50%) rotate(180deg); }
@@ -45,21 +45,16 @@ body{ background: var(--c5); }
 .p-bottom-right  { right:96px;  bottom:62px; transform: rotate(-45deg); }
 .p-top-left      { left:96px;   top:62px; transform: rotate(135deg); }
 .p-bottom-left   { left:96px;   bottom:62px; transform: rotate(45deg); }
-/* antes: background: var(--c3);  ->  ahora tono fuerte */
+
 /* círculos inferiores (morado fuerte) */
 .leaf{
   width: 90px;
   height: 90px;
-  background: var(--c2);     /* tono fuerte */
-  border-radius: 50%;        /* círculo perfecto */
+  background: var(--c2);
+  border-radius: 50%;
   box-shadow: none;
-  transition: none !important;  /* estáticos */
+  transition: none !important;
 }
-
-/*.leaf{
-  width:120px; height:90px; background: var(--c3);
-  border-top-left-radius: 60px 60px; border-bottom-left-radius: 60px 60px;
-}*/
 .leaf-left  { left:40px;  bottom:-30px; transform: rotate(10deg); }
 .leaf-right { right:40px; bottom:-30px; transform: scaleX(-1) rotate(10deg); }
 
@@ -92,23 +87,19 @@ body{ background: var(--c5); }
 .speed-panel{
   background: var(--c4);
   border-radius: 999px;
-  padding: .2rem .5rem;          /* menos gordita */
-  display: inline-flex !important; /* se ajusta al contenido */
+  padding: .2rem .5rem;
+  display: inline-flex !important;
   align-items: center;
   gap: .25rem;
 }
-
-
 .speed-title{
   color: var(--c1);
   font-weight: 600;
   letter-spacing: .04em;
 }
-
 .speed-subtitle{
   white-space: nowrap;
 }
-
 .speed-btn{
   min-width: 36px;
   padding: .15rem .6rem;
@@ -116,32 +107,55 @@ body{ background: var(--c5); }
   font-size: .8rem;
   line-height: 1.2;
 }
-
-/* botón seleccionado */
 .speed-btn.active{
   background: var(--c1);
   border-color: var(--c1);
   color: #fff;
 }
-
 @media (max-width: 576px){
   .speed-panel{
     align-items: flex-start !important;
   }
 }
 
+/* Tarjetas de WebSocket (Movimientos / Obstáculos) */
+.ws-card{
+  background: linear-gradient(135deg, #f6f0ff, #e9ddf5);
+  border-radius: 14px;
+  border: 2px solid var(--c1);
+  padding: .45rem .75rem .7rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,.08);
+}
+
+.ws-card-header{
+  font-weight: 700;
+  color: var(--c1);
+  margin-bottom: .35rem;
+  text-transform: uppercase;
+  font-size: .85rem;
+  letter-spacing: .05em;
+}
+
+/* “Pantalla” donde se ve el log */
+.ws-log{
+  margin: 0;
+  padding: .45rem .6rem;
+  font-family: "Consolas", "Fira Code", monospace;
+  font-size: .75rem;
+  line-height: 1.5;          /* más espacio entre líneas */
+  max-height: 130px;         /* controla altura para evitar scroll de página */
+  overflow-y: auto;
+  white-space: pre-wrap;
+  background: rgba(255,255,255,.9);
+  border-radius: 10px;
+  border: 1px dashed #b695c0;
+}
+
+/* Footer */
 .app-footer{
-  background: var(--c1);             /* mismo color que el header */
+  background: var(--c1);
   color: #ffffff;
-  border-top: 0.5px solid #6f4b83;     /* igual que el borde inferior del header */
+  border-top: 0.5px solid #6f4b83;
   text-align: center;
   font-size: 0.9rem;
 }
-
-
-
-
-
-
-
-
