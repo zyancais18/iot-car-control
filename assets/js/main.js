@@ -19,8 +19,8 @@ const SPEED = {
 
 // ---- Presets de velocidad (3 niveles) ----
 const VEL_PRESETS = {
-  baja: 140,
-  media: 200,
+  baja: 160,
+  media: 220,
   alta: 255
 };
 
@@ -412,4 +412,5 @@ async function onReproducirSeleccion(){
     modalPlayer.hide();
   }
 }
+
 
