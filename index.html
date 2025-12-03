@@ -7,7 +7,6 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css">
   <link rel="icon" href="assets/PersonaIcon.png" type="image/png" />
-
 </head>
 <body>
   <header class="app-header px-3 py-2">
@@ -49,7 +48,7 @@
         <button id="btnDetener" class="btn btn-outline-danger  btn-sm" disabled>Detener</button>
       </div>
 
-      <!-- Derecha: Velocidad (presets 0–9 y MAX) visible SIEMPRE -->
+      <!-- Derecha: Velocidad (presets) visible SIEMPRE -->
       <div class="col-lg-5 ms-auto">
         <div class="speed-panel flex-column flex-sm-row justify-content-sm-end align-items-sm-center gap-2">
           <div class="speed-title small text-uppercase">Velocidad</div>
@@ -58,41 +57,60 @@
             <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="media">Media</button>
             <button type="button" class="btn btn-outline-primary btn-sm speed-btn" data-speed="alta">Alta</button>
           </div>
-
         </div>
       </div>
     </div>
 
-    <!-- La flor de botones -->
-    <section class="d-flex justify-content-center position-relative">
-      <div id="flower" class="flower position-relative">
-        <!-- Indicador de grabación -->
-        <div id="recStatus"
-             class="small text-secondary"
-             style="position:absolute; right:-150px; top:0; width:140px;"
-             hidden>
-          Grabando: 0 pasos…
+    <!-- Layout principal: Flor a la izquierda, feeds WS a la derecha -->
+    <div class="row g-3 align-items-start">
+      <!-- Columna izquierda: flor de botones -->
+      <div class="col-lg-5 d-flex justify-content-center">
+        <section class="d-flex justify-content-center position-relative w-100">
+          <div id="flower" class="flower position-relative mx-auto">
+            <!-- Indicador de grabación -->
+            <div id="recStatus"
+                class="small text-secondary"
+                style="position:absolute; right:-150px; top:0; width:140px;"
+                hidden>
+              Grabando: 0 pasos…
+            </div>
+
+            <!-- centro -->
+            <button class="petal center" data-status="3" aria-label="Detener"></button>
+
+            <!-- pétalos (arriba/der/izq) -->
+            <button class="petal p-top"      data-status="1" aria-label="Adelante"></button>
+            <button class="petal p-top-right" data-status="4" aria-label="Vuelta adelante derecha"></button>
+            <button class="petal p-right"     data-status="8" aria-label="Giro 90 derecha"></button>
+            <button class="petal p-bottom-right" data-status="6" aria-label="Vuelta atrás derecha"></button>
+
+            <button class="petal p-bottom" data-status="2" aria-label="Atrás"></button>
+            <button class="petal p-bottom-left" data-status="7" aria-label="Vuelta atrás izquierda"></button>
+            <button class="petal p-left"   data-status="9" aria-label="Giro 90 izquierda"></button>
+            <button class="petal p-top-left" data-status="5" aria-label="Vuelta adelante izquierda"></button>
+
+            <!-- hojas 360° -->
+            <button class="leaf leaf-left"  data-status="11" aria-label="Giro 360 izquierda"></button>
+            <button class="leaf leaf-right" data-status="10" aria-label="Giro 360 derecha"></button>
+          </div>
+        </section>
+      </div>
+
+      <!-- Columna derecha: tablas de WebSocket -->
+      <div class="col-lg-7">
+        <!-- Movimientos -->
+        <div class="ws-card mb-2">
+          <div class="ws-card-header">Movimientos</div>
+          <pre id="wsMovimientos" class="ws-log"></pre>
         </div>
 
-        <!-- centro -->
-        <button class="petal center" data-status="3" aria-label="Detener"></button>
-
-        <!-- pétalos (arriba/der/izq) -->
-        <button class="petal p-top"      data-status="1" aria-label="Adelante"></button>
-        <button class="petal p-top-right" data-status="4" aria-label="Vuelta adelante derecha"></button>
-        <button class="petal p-right"     data-status="8" aria-label="Giro 90 derecha"></button>
-        <button class="petal p-bottom-right" data-status="6" aria-label="Vuelta atrás derecha"></button>
-
-        <button class="petal p-bottom" data-status="2" aria-label="Atrás"></button>
-        <button class="petal p-bottom-left" data-status="7" aria-label="Vuelta atrás izquierda"></button>
-        <button class="petal p-left"   data-status="9" aria-label="Giro 90 izquierda"></button>
-        <button class="petal p-top-left" data-status="5" aria-label="Vuelta adelante izquierda"></button>
-
-        <!-- hojas 360° -->
-        <button class="leaf leaf-left"  data-status="11" aria-label="Giro 360 izquierda"></button>
-        <button class="leaf leaf-right" data-status="10" aria-label="Giro 360 derecha"></button>
+        <!-- Obstáculos -->
+        <div class="ws-card">
+          <div class="ws-card-header">Obstáculos</div>
+          <pre id="wsObstaculos" class="ws-log"></pre>
+        </div>
       </div>
-    </section>
+    </div>
   </main>
 
   <!-- Modal: Cargar secuencias -->
@@ -156,14 +174,3 @@
   <script src="assets/js/main.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
